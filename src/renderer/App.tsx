@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom';
 import { BarChart3, BookOpen, ChevronLeft, ChevronRight, Settings as SettingsIcon } from 'lucide-react';
+import packageJson from '../../package.json';
 import type { AppSettings } from '../shared/types';
 import { DashboardPage } from './pages/DashboardPage';
 import { DetailPage } from './pages/DetailPage';
@@ -8,6 +9,7 @@ import { OnboardingPage } from './pages/OnboardingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TradesPage } from './pages/TradesPage';
 import { TooltipProvider } from './components/ui/tooltip';
+import { resolveFontSize } from './fontSize';
 
 const SIDEBAR_STORAGE_KEY = 'stock-earn-sidebar-collapsed';
 
@@ -17,13 +19,16 @@ export function App() {
     () => window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true',
   );
 
-  useEffect(() => { void window.stockEarn.settings.get().then(setSettings); }, []);
+  useEffect(() => { void window.stockEarn.settings.get().then((next) => setSettings({ ...next, fontSize: resolveFontSize(next.fontSize) })); }, []);
   useEffect(() => {
     window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsed));
   }, [sidebarCollapsed]);
+  useEffect(() => {
+    document.documentElement.dataset.fontSize = settings?.fontSize ?? 'base';
+  }, [settings?.fontSize]);
 
   if (!settings) return <div className="app-loading"><div className="brand-mark">SE</div><span>正在打开账本…</span></div>;
-  if (!settings.initialized) return <OnboardingPage onComplete={() => window.stockEarn.settings.get().then(setSettings)} />;
+  if (!settings.initialized) return <OnboardingPage onComplete={() => window.stockEarn.settings.get().then((next) => setSettings({ ...next, fontSize: resolveFontSize(next.fontSize) }))} />;
 
   return <TooltipProvider><div className={`app-shell color-${settings.colorMode}${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
     <aside className="sidebar" aria-label="主导航">
@@ -48,6 +53,7 @@ export function App() {
         <NavLink to="/settings" title={sidebarCollapsed ? '设置' : undefined}><SettingsIcon size={18} /><span>设置</span></NavLink>
       </nav>
       <div className="sidebar-note"><span>LOCAL LEDGER</span><p>数据只保存在这台电脑</p></div>
+      <div className="app-version" title={`Stock Earn ${packageJson.version}`}>v{packageJson.version}</div>
     </aside>
     <main className="app-content">
       <div className="window-drag top-drag" />

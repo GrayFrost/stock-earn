@@ -4,7 +4,7 @@ import Decimal from 'decimal.js';
 import { DateTime } from 'luxon';
 import { computeFifo, PositionRuleError, previewTrade } from '../shared/fifo';
 import type {
-  AppSettings, ColorMode, DailyBar, Instrument, InstrumentDetail, InstrumentPosition, Platform,
+  AppSettings, ColorMode, DailyBar, FontSize, Instrument, InstrumentDetail, InstrumentPosition, Platform,
   PlatformPosition, PortfolioSummary, Quote, Trade, TradeInput, TradeResult,
 } from '../shared/types';
 
@@ -47,9 +47,8 @@ export class LedgerDatabase {
       INSERT INTO schema_meta(version) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM schema_meta);
       CREATE TABLE IF NOT EXISTS settings (
         id INTEGER PRIMARY KEY CHECK (id = 1), initialized INTEGER NOT NULL DEFAULT 0,
-        start_date TEXT, color_mode TEXT NOT NULL DEFAULT 'us'
+        start_date TEXT, color_mode TEXT NOT NULL DEFAULT 'us', font_size TEXT NOT NULL DEFAULT 'base'
       );
-      INSERT OR IGNORE INTO settings(id, initialized, start_date, color_mode) VALUES (1, 0, NULL, 'us');
       CREATE TABLE IF NOT EXISTS platforms (
         id TEXT PRIMARY KEY, name TEXT NOT NULL COLLATE NOCASE UNIQUE, archived INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL
       );
@@ -76,23 +75,37 @@ export class LedgerDatabase {
         day TEXT PRIMARY KEY, credits INTEGER NOT NULL DEFAULT 0, last_request_at TEXT
       );
     `);
+    const settingsColumns = this.db.prepare('PRAGMA table_info(settings)').all() as Row[];
+    if (!settingsColumns.some((column) => str(column.name) === 'font_size')) {
+      this.db.exec("ALTER TABLE settings ADD COLUMN font_size TEXT NOT NULL DEFAULT 'base'");
+    }
+    this.db.prepare("INSERT OR IGNORE INTO settings(id, initialized, start_date, color_mode, font_size) VALUES (1, 0, NULL, 'us', 'base')").run();
+    this.db.exec('UPDATE schema_meta SET version = 2 WHERE version < 2');
   }
 
   getSettings(hasApiKey = false): AppSettings {
     const row = this.db.prepare('SELECT * FROM settings WHERE id = 1').get() as Row;
-    return { initialized: bool(row.initialized), startDate: row.start_date ? str(row.start_date) : null, colorMode: str(row.color_mode) as ColorMode, hasApiKey };
+    const fontSize = str(row.font_size);
+    return {
+      initialized: bool(row.initialized),
+      startDate: row.start_date ? str(row.start_date) : null,
+      colorMode: str(row.color_mode) as ColorMode,
+      fontSize: ['base', 'comfortable', 'large', 'extra-large'].includes(fontSize) ? fontSize as FontSize : 'base',
+      hasApiKey,
+    };
   }
 
-  updateSettings(input: { startDate?: string; colorMode?: ColorMode; initialized?: boolean }) {
+  updateSettings(input: { startDate?: string; colorMode?: ColorMode; fontSize?: FontSize; initialized?: boolean }) {
     const current = this.getSettings();
     if (input.startDate) {
       const dates = (this.db.prepare('SELECT executed_at FROM trades').all() as Row[]).map((row) => this.easternDate(str(row.executed_at))).sort();
       const earliest = dates[0];
       if (earliest && input.startDate > earliest) throw new Error(`起始日不能晚于最早交易日 ${earliest}`);
     }
-    this.db.prepare('UPDATE settings SET start_date = ?, color_mode = ?, initialized = ? WHERE id = 1').run(
+    this.db.prepare('UPDATE settings SET start_date = ?, color_mode = ?, font_size = ?, initialized = ? WHERE id = 1').run(
       input.startDate ?? current.startDate,
       input.colorMode ?? current.colorMode,
+      input.fontSize ?? current.fontSize,
       input.initialized === undefined ? Number(current.initialized) : Number(input.initialized),
     );
   }

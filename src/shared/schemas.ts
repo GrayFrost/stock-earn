@@ -28,6 +28,7 @@ export const tradePreviewSchema = tradeInputSchema.extend({ id: idSchema.optiona
 export const settingsUpdateSchema = z.object({
   startDate: z.string().date().optional(),
   colorMode: z.enum(['us', 'cn']).optional(),
+  fontSize: z.enum(['base', 'comfortable', 'large', 'extra-large']).optional(),
   apiKey: z.string().trim().max(300).nullable().optional(),
   initialized: z.boolean().optional(),
 });

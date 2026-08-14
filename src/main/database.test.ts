@@ -58,6 +58,12 @@ describe('LedgerDatabase', () => {
     expect(() => db.updateSettings({ startDate: '2026-01-06' })).toThrow('最早交易日');
   });
 
+  it('默认使用基础字号并持久化字体设置', () => {
+    expect(db.getSettings().fontSize).toBe('base');
+    db.updateSettings({ fontSize: 'large' });
+    expect(db.getSettings().fontSize).toBe('large');
+  });
+
   it('导出并恢复版本化备份', () => {
     const { platform, instrument } = seed();
     db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '10', fee: '0', executedAt: '2026-01-05T15:00:00.000Z' });

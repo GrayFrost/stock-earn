@@ -1,11 +1,13 @@
 export type TradeSide = 'BUY' | 'SELL';
 export type InferredAction = 'OPEN_LONG' | 'ADD_LONG' | 'CLOSE_LONG' | 'OPEN_SHORT' | 'ADD_SHORT' | 'CLOSE_SHORT';
 export type ColorMode = 'us' | 'cn';
+export type FontSize = 'base' | 'comfortable' | 'large' | 'extra-large';
 
 export interface AppSettings {
   initialized: boolean;
   startDate: string | null;
   colorMode: ColorMode;
+  fontSize: FontSize;
   hasApiKey: boolean;
 }
 
@@ -132,7 +134,7 @@ export interface RefreshResult {
 export interface StockEarnApi {
   settings: {
     get(): Promise<AppSettings>;
-    update(input: { startDate?: string; colorMode?: ColorMode; apiKey?: string | null; initialized?: boolean }): Promise<AppSettings>;
+    update(input: { startDate?: string; colorMode?: ColorMode; fontSize?: FontSize; apiKey?: string | null; initialized?: boolean }): Promise<AppSettings>;
     testQuoteProvider(apiKey: string): Promise<{ ok: boolean; message: string }>;
   };
   platforms: {

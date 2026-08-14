@@ -16,7 +16,12 @@
   --trade: #2f6fed;
   --sell: #d97706;
   --shadow: 0 18px 50px rgba(32, 46, 66, 0.09);
+  font-size: 16px;
 }
+
+:root[data-font-size="comfortable"] { font-size: 17.28px; }
+:root[data-font-size="large"] { font-size: 18.56px; }
+:root[data-font-size="extra-large"] { font-size: 19.84px; }
 
 * { box-sizing: border-box; }
 html, body, #root { min-width: 100%; min-height: 100%; margin: 0; }
@@ -49,11 +54,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar nav a:hover { background: rgba(255,255,255,.7); color: var(--ink); }
 .sidebar nav a.active { color: var(--ink); background: var(--paper); box-shadow: 0 3px 10px rgba(35, 49, 69, .06); }
 .sidebar nav a.active svg { color: var(--trade); }
-.sidebar-note { margin: auto 24px 24px; padding-top: 16px; border-top: 1px solid #d8dee7; }
+.sidebar-note { margin: auto 24px 0; padding-top: 16px; border-top: 1px solid #d8dee7; }
 .sidebar-note span { font: 500 9px/1 "IBM Plex Mono"; letter-spacing: .15em; color: #8a95a6; }
 .sidebar-note p { margin: 6px 0 0; color: var(--slate); font-size: 11px; }
+.app-version { margin: 12px 24px 22px; color: #98a2b1; font: 500 9px/1 "IBM Plex Mono", monospace; letter-spacing: .06em; }
 .sidebar-collapsed .brand { justify-content: center; padding-right: 0; padding-left: 0; }
 .sidebar-collapsed .brand-copy, .sidebar-collapsed .sidebar nav a span, .sidebar-collapsed .sidebar-note { display: none; }
+.sidebar-collapsed .app-version { margin: auto 0 22px; text-align: center; }
 .sidebar-collapsed .sidebar nav { padding: 0 14px; }
 .sidebar-collapsed .sidebar nav a { justify-content: center; width: 44px; height: 44px; padding: 0; }
 .app-content { position: relative; display: flex; min-width: 0; flex-direction: column; overflow: hidden; }
@@ -371,6 +378,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--trade); box-shad
 .color-options button.active { border-color: var(--trade); box-shadow: 0 0 0 2px rgba(47,111,237,.09); }
 .color-options span { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 600; }.color-options small { display: block; margin-top: 5px; color: var(--slate); font-size: 9px; }
 .color-options i { width: 8px; height: 8px; border-radius: 50%; }.profit-swatch { background: #087f5b; }.loss-swatch { background: #c23b3b; }
+.font-size-options { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.font-size-options button { position: relative; display: grid; grid-template-columns: 48px 1fr auto; min-height: 68px; align-items: center; gap: 10px; padding: 10px 12px; color: var(--ink); background: #fff; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; text-align: left; transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease; }
+.font-size-options button:hover { border-color: #aeb9c9; background: #fbfcfe; }
+.font-size-options button:disabled { cursor: wait; }
+.font-size-options button.active { border-color: var(--trade); background: #eef4ff; box-shadow: inset 0 0 0 1px var(--trade), 0 0 0 2px rgba(47,111,237,.12); }
+.font-size-options button.active .font-size-option-preview { background: var(--trade); box-shadow: 0 5px 13px rgba(47,111,237,.2); }
+.font-size-option-preview { display: grid; width: 42px; height: 42px; place-items: center; color: #fff; background: var(--ink); border-radius: 9px 9px 9px 3px; font-family: "IBM Plex Mono", monospace; font-weight: 600; letter-spacing: -.04em; }
+.font-size-option-preview.preview-base { font-size: 14px; }
+.font-size-option-preview.preview-comfortable { font-size: 15px; }
+.font-size-option-preview.preview-large { font-size: 16px; }
+.font-size-option-preview.preview-extra-large { font-size: 18px; }
+.font-size-options strong { display: block; font-size: 11px; }
+.font-size-options small { display: block; margin-top: 4px; color: var(--slate); font-size: 9px; }
+.font-size-current { display: inline-flex; min-width: 52px; align-items: center; justify-content: center; gap: 3px; padding: 4px 6px; color: #fff; background: var(--trade); border-radius: 5px; font-size: 9px; font-weight: 600; white-space: nowrap; }
 .inline-form { display: flex; align-items: center; gap: 9px; }.inline-form input { flex: 1; }
 .platform-list { display: grid; gap: 7px; }
 .platform-list > div { display: grid; grid-template-columns: 32px 1fr auto auto; align-items: center; gap: 10px; min-height: 46px; padding: 7px 9px; background: #f8fafc; border: 1px solid var(--line-soft); border-radius: 8px; }
@@ -381,6 +402,61 @@ input:focus, select:focus, textarea:focus { border-color: var(--trade); box-shad
 .page-loading { min-height: calc(100vh - 50px); flex-direction: column; }
 .page-loading span { width: 25px; height: 25px; border: 2px solid var(--line); border-top-color: var(--ink); border-radius: 50%; animation: spin .8s linear infinite; }
 
+/* Font preferences scale type without enlarging icons, controls, or card geometry. */
+:root:not([data-font-size="base"]) :is(
+  .date-time-trigger > small, .date-time-heading > small
+) { font-size: .5rem; }
+
+:root:not([data-font-size="base"]) :is(
+  .sidebar-note span, .app-version, .eyebrow, .ui-tooltip, .ui-calendar-grid th,
+  .table-hint, th, .stock-identity span, .quote-status, .trend-legend,
+  .profit-chart-tooltip > span, .profit-chart-tooltip div, .detail-metrics span,
+  .chart-legend, .side-label, .trade-instrument-link span, .trade-direction small,
+  .trades-pagination p, .trade-preview span, .onboarding-visual small,
+  .setup-progress span, .status-badge, .color-options small, .font-size-options small, .font-size-current,
+  .platform-list small, .platform-avatar
+) { font-size: .5625rem; }
+
+:root:not([data-font-size="base"]) :is(
+  .ui-field, .ui-calendar-day-button, .date-time-heading > span,
+  .ledger-origin span, .ledger-today span, .ledger-line span, .ledger-metrics span,
+  .position-chip, .profit-chart-tooltip strong, .detail-title p, .detail-quote span,
+  .section-heading > div > p:last-child, .record-count, .trades-total, .trade-time,
+  .trades-pagination p span, label, .inline-error, .trade-preview strong,
+  .ledger-demo, .ledger-demo div, .settings-card-title p, .test-result
+) { font-size: .625rem; }
+
+:root:not([data-font-size="base"]) :is(
+  .brand span, .button.small, .ui-button-sm, .ui-select-item, .ui-tabs-trigger,
+  .date-time-trigger > span, .date-time-row .ui-input, .ledger-metrics strong,
+  .segmented button, .search-box input, .compact-select, td, .empty-state p,
+  .profit-chart-empty strong, .chart-empty, .pagination-page strong,
+  .side-switch button, .color-options span, .font-size-options strong,
+  .platform-list strong
+) { font-size: .6875rem; }
+
+:root:not([data-font-size="base"]) :is(
+  .brand-mark, .button, .ui-button, .ui-calendar-caption-label,
+  .ledger-origin strong, .ledger-today strong, .notice-bar, .stock-identity strong,
+  .back-button, .ticker-block, .trade-instrument-link strong, .visual-copy p,
+  .onboarding-form .muted, .app-loading, .page-loading
+) { font-size: .75rem; }
+
+:root:not([data-font-size="base"]) :is(.sidebar nav a, .page-header > div > p:last-child) { font-size: .8125rem; }
+:root:not([data-font-size="base"]) :is(.detail-metrics strong, .onboarding-brand, .settings-card-title h2) { font-size: .875rem; }
+:root:not([data-font-size="base"]) :is(.brand strong, .empty-state h3) { font-size: .9375rem; }
+:root:not([data-font-size="base"]) .section-heading h2 { font-size: 1rem; }
+:root:not([data-font-size="base"]) .ui-dialog-header h2 { font-size: 1.0625rem; }
+:root:not([data-font-size="base"]) .empty-glyph { font-size: 1.125rem; }
+:root:not([data-font-size="base"]) .trades-total strong { font-size: 1.1875rem; }
+:root:not([data-font-size="base"]) .detail-metrics div:first-child strong { font-size: 1.25rem; }
+:root:not([data-font-size="base"]) .detail-title h1 { font-size: 1.3125rem; }
+:root:not([data-font-size="base"]) .detail-quote strong { font-size: 1.5rem; }
+:root:not([data-font-size="base"]) .onboarding-form h2 { font-size: 1.5625rem; }
+:root:not([data-font-size="base"]) .page-header h1 { font-size: 1.625rem; }
+:root:not([data-font-size="base"]) .ledger-line strong { font-size: clamp(1.5rem, 2.5vw, 2.375rem); }
+:root:not([data-font-size="base"]) .visual-copy h1 { font-size: clamp(1.875rem, 3.2vw, 3rem); }
+
 @media (max-width: 1220px) {
   .app-shell { grid-template-columns: 205px minmax(0, 1fr); }
   .app-shell.sidebar-collapsed { grid-template-columns: 72px minmax(0, 1fr); }
@@ -390,6 +466,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--trade); box-shad
 }
 
 @media (max-width: 720px) {
+  .font-size-options { grid-template-columns: 1fr 1fr; }
   .trades-pagination { align-items: stretch; flex-direction: column; }
   .trades-pagination nav { justify-content: space-between; }
 }
