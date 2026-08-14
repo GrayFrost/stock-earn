@@ -91,6 +91,8 @@ export interface PlatformPosition {
 export interface InstrumentPosition {
   instrument: Instrument;
   quote: Quote | null;
+  sinceEntryHigh: string | null;
+  sinceEntryLow: string | null;
   longQuantity: string;
   shortQuantity: string;
   realizedPnl: string;

@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { DetailPage } from './pages/DetailPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { TradesPage } from './pages/TradesPage';
 import { TooltipProvider } from './components/ui/tooltip';
 
 const SIDEBAR_STORAGE_KEY = 'stock-earn-sidebar-collapsed';
@@ -50,13 +51,15 @@ export function App() {
     </aside>
     <main className="app-content">
       <div className="window-drag top-drag" />
-      <Routes>
-        <Route path="/" element={<DashboardPage />} />
-        <Route path="/stock/:id" element={<DetailPage />} />
-        <Route path="/trades" element={<DashboardPage showAllInitially />} />
-        <Route path="/settings" element={<SettingsPage onSettingsChange={(value) => setSettings(value)} />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="page-scroll">
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/stock/:id" element={<DetailPage />} />
+          <Route path="/trades" element={<TradesPage />} />
+          <Route path="/settings" element={<SettingsPage onSettingsChange={(value) => setSettings(value)} />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </main>
   </div></TooltipProvider>;
 }

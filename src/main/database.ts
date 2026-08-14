@@ -211,9 +211,19 @@ export class LedgerDatabase {
     const instruments = this.listInstruments(true);
     const platforms = new Map(this.listPlatforms(true).map((platform) => [platform.id, platform]));
     const quotes = new Map(this.getQuotes().map((quote) => [quote.instrumentId, quote]));
+    const startDate = this.getSettings().startDate;
     const positions: InstrumentPosition[] = instruments.map((instrument) => {
       const quote = quotes.get(instrument.id) ?? null;
       const trades = this.getTrades(instrument.id);
+      const bars = startDate ? this.getDailyBars(instrument.id).filter((bar) => bar.date >= startDate) : [];
+      const highs = bars.map((bar) => decimal(bar.high));
+      const lows = bars.map((bar) => decimal(bar.low));
+      if (quote && bars.length) {
+        highs.push(decimal(quote.price));
+        lows.push(decimal(quote.price));
+      }
+      const sinceEntryHigh = highs.length ? decimalOut(Decimal.max(...highs)) : null;
+      const sinceEntryLow = lows.length ? decimalOut(Decimal.min(...lows)) : null;
       const grouped = new Map<string, Trade[]>();
       for (const trade of trades) grouped.set(trade.platformId, [...(grouped.get(trade.platformId) ?? []), trade]);
       const platformPositions: PlatformPosition[] = [...grouped].map(([platformId, group]) => {
@@ -230,7 +240,7 @@ export class LedgerDatabase {
       const realizedPnl = sum('realizedPnl');
       const unrealizedPnl = sum('unrealizedPnl');
       return {
-        instrument, quote, longQuantity: sum('longQuantity'), shortQuantity: sum('shortQuantity'), realizedPnl, unrealizedPnl,
+        instrument, quote, sinceEntryHigh, sinceEntryLow, longQuantity: sum('longQuantity'), shortQuantity: sum('shortQuantity'), realizedPnl, unrealizedPnl,
         netPnl: decimalOut(decimal(realizedPnl).plus(unrealizedPnl)), fees: sum('fees'), exposure: sum('exposure'),
         platforms: platformPositions, active: platformPositions.some((item) => item.direction !== 'FLAT'),
       };
@@ -240,7 +250,7 @@ export class LedgerDatabase {
     const unrealizedPnl = total('unrealizedPnl');
     const longExposure = decimalOut(positions.reduce((sum, item) => sum.plus(item.platforms.filter((p) => p.direction === 'LONG').reduce((s, p) => s.plus(p.exposure), decimal(0))), decimal(0)));
     const shortExposure = decimalOut(positions.reduce((sum, item) => sum.plus(item.platforms.filter((p) => p.direction === 'SHORT').reduce((s, p) => s.plus(p.exposure), decimal(0))), decimal(0)));
-    return { startDate: this.getSettings().startDate, asOf: now(), realizedPnl, unrealizedPnl, netPnl: decimalOut(decimal(realizedPnl).plus(unrealizedPnl)), fees: total('fees'), longExposure, shortExposure, instruments: positions };
+    return { startDate, asOf: now(), realizedPnl, unrealizedPnl, netPnl: decimalOut(decimal(realizedPnl).plus(unrealizedPnl)), fees: total('fees'), longExposure, shortExposure, instruments: positions };
   }
 
   getInstrumentDetail(id: string): InstrumentDetail {

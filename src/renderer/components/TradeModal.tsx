@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight } from 'lucide-react';
 import type { InferredAction, Instrument, Platform, TradeInput, TradeResult } from '../../shared/types';
 import { actionLabel, errorMessage, etInputToUtc, money, number, toEtInput } from '../format';
 import { Modal } from './Modal';
+import { DateTimePicker } from './DateTimePicker';
 import { Button } from './ui/button';
 import { Field, Input, Textarea } from './ui/input';
 import { Select } from './ui/select';
@@ -50,7 +51,7 @@ export function TradeModal({ instrument, platforms, trade, onClose, onSaved }: {
       </div>
       <Field label="交易平台"><Select value={platformId} onValueChange={setPlatformId} options={platforms.filter((item) => !item.archived || item.id === trade?.platformId).map((item) => ({ value: item.id, label: item.name }))} /></Field>
       <div className="form-grid three"><Field label="股数"><Input inputMode="decimal" value={quantity} onChange={(e) => setQuantity(e.target.value)} placeholder="10 或 0.25" required /></Field><Field label="每股价格"><Input inputMode="decimal" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="185.42" required /></Field><Field label="手续费"><Input inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} required /></Field></div>
-      <Field label="成交时间（ET）"><Input type="datetime-local" value={executedAt} onChange={(e) => setExecutedAt(e.target.value)} required /></Field>
+      <Field label="成交时间（ET）"><DateTimePicker value={executedAt} onChange={setExecutedAt} /></Field>
       <Field label="备注"><Textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="可选：订单号、交易理由…" /></Field>
       <div className="trade-preview">
         <div><span>成交金额</span><strong>{money(gross)}</strong></div>

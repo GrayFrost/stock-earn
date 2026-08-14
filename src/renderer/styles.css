@@ -31,7 +31,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .is-loss { color: var(--loss) !important; }
 .muted { color: var(--slate); }
 .window-drag { height: 44px; width: 100%; -webkit-app-region: drag; }
-.top-drag { position: absolute; z-index: 20; top: 0; left: 0; }
+.top-drag { position: relative; z-index: 20; flex: 0 0 44px; }
 
 .app-shell { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: 100vh; background: var(--canvas); transition: grid-template-columns 220ms cubic-bezier(.4, 0, .2, 1); }
 .app-shell.sidebar-collapsed { grid-template-columns: 72px minmax(0, 1fr); }
@@ -56,8 +56,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .sidebar-collapsed .brand-copy, .sidebar-collapsed .sidebar nav a span, .sidebar-collapsed .sidebar-note { display: none; }
 .sidebar-collapsed .sidebar nav { padding: 0 14px; }
 .sidebar-collapsed .sidebar nav a { justify-content: center; width: 44px; height: 44px; padding: 0; }
-.app-content { position: relative; overflow-y: auto; overflow-x: hidden; }
-.page { width: min(1500px, 100%); margin: 0 auto; padding: 74px 36px 46px; }
+.app-content { position: relative; display: flex; min-width: 0; flex-direction: column; overflow: hidden; }
+.page-scroll { min-width: 0; min-height: 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
+.page { width: min(1500px, 100%); margin: 0 auto; padding: 30px 36px 46px; }
 
 .page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; margin-bottom: 25px; }
 .page-header h1, .detail-title h1 { margin: 4px 0 0; font-size: 26px; line-height: 1.25; letter-spacing: -.025em; }
@@ -120,8 +121,43 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 @keyframes dialog-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(.985); } }
 .ui-tooltip { z-index: 150; padding: 6px 8px; color: #fff; background: var(--ink); border-radius: 5px; font-size: 9px; box-shadow: 0 5px 14px rgba(23,33,50,.18); }
 .ui-tooltip-arrow { fill: var(--ink); }
+.ui-popover-content { z-index: 140; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 18px 45px rgba(23,33,50,.16); outline: 0; transform-origin: var(--radix-popover-content-transform-origin); animation: popover-in 140ms cubic-bezier(.16,1,.3,1); }
+@keyframes popover-in { from { opacity: 0; transform: scale(.975) translateY(-3px); } }
+.date-time-trigger { width: 100%; height: 40px; justify-content: flex-start; padding: 0 11px; font-weight: 500; }
+.date-time-trigger:hover { transform: none; }
+.date-time-trigger > svg { flex: 0 0 auto; color: #7b8799; }
+.date-time-trigger > span { flex: 1; color: var(--ink); font: 500 11px/1 "IBM Plex Mono", monospace; text-align: left; }
+.date-time-trigger > small { padding: 4px 6px; color: #50627e; background: #eef3fb; border-radius: 5px; font: 600 8px/1 "IBM Plex Mono", monospace; letter-spacing: .08em; }
+.date-time-popover { width: 306px; overflow: hidden; }
+.ui-calendar { position: relative; padding: 12px 13px 10px; color: var(--ink); }
+.ui-calendar-months, .ui-calendar-month { width: 100%; }
+.ui-calendar-caption { display: flex; height: 38px; align-items: center; justify-content: center; }
+.ui-calendar-caption-label { font-size: 12px; font-weight: 600; letter-spacing: -.01em; }
+.ui-calendar-nav { position: absolute; z-index: 1; top: 14px; right: 13px; left: 13px; display: flex; justify-content: space-between; pointer-events: none; }
+.ui-calendar-nav-button { display: grid; width: 30px; height: 30px; padding: 0; place-items: center; color: #758196; background: transparent; border: 0; border-radius: 7px; cursor: pointer; pointer-events: auto; }
+.ui-calendar-nav-button:hover { color: var(--ink); background: #f0f3f7; }
+.ui-calendar-grid { width: 100%; border-collapse: collapse; }
+.ui-calendar-grid th, .ui-calendar-grid td { padding: 0; background: transparent; border: 0; text-align: center; }
+.ui-calendar-grid th { width: 40px; height: 30px; color: #909baa; font: 500 9px/1 "Noto Sans SC", sans-serif; }
+.ui-calendar-grid td { width: 40px; height: 36px; color: inherit; font-family: "IBM Plex Mono", monospace; }
+.ui-calendar-day { position: relative; }
+.ui-calendar-day-button { display: inline-grid; width: 32px; height: 32px; padding: 0; place-items: center; color: #3b475a; background: transparent; border: 0; border-radius: 8px; cursor: pointer; font: 500 10px/1 "IBM Plex Mono", monospace; }
+.ui-calendar-day-button:hover { color: var(--ink); background: #f0f4fa; }
+.ui-calendar-day.is-today:not(.is-selected) .ui-calendar-day-button { color: var(--trade); box-shadow: inset 0 0 0 1px #b8ccf5; }
+.ui-calendar-day.is-selected .ui-calendar-day-button { color: #fff; background: var(--trade); box-shadow: 0 4px 10px rgba(47,111,237,.24); }
+.ui-calendar-day.is-outside .ui-calendar-day-button { color: #b3bbc7; }
+.ui-calendar-day.is-disabled .ui-calendar-day-button { opacity: .35; cursor: not-allowed; }
+.ui-calendar-day.is-hidden { visibility: hidden; }
+.date-time-controls { padding: 11px 13px 13px; background: #f8fafc; border-top: 1px solid var(--line-soft); }
+.date-time-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.date-time-heading > span { display: inline-flex; align-items: center; gap: 6px; color: #4d5a6e; font-size: 10px; font-weight: 600; }
+.date-time-heading > span svg { color: var(--trade); }
+.date-time-heading > small { color: #8b96a7; font-size: 8px; }
+.date-time-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; }
+.date-time-row .ui-input { height: 34px; font: 500 11px/1 "IBM Plex Mono", monospace; }
+.date-time-row .ui-button { white-space: nowrap; }
 
-.ledger-band { position: relative; display: grid; grid-template-columns: 132px 1fr 132px; align-items: center; min-height: 168px; padding: 26px 30px 68px; overflow: hidden; color: #fff; background: var(--ink); border-radius: 15px; box-shadow: 0 15px 35px rgba(23, 33, 50, .16); }
+.ledger-band { position: relative; display: grid; grid-template-columns: 132px 1fr 132px; align-items: center; min-height: 168px; padding: 26px 30px 68px; overflow: hidden; color: #fff; background: var(--ink); border-radius: 15px 15px 15px 4px; box-shadow: 0 15px 35px rgba(23, 33, 50, .16); }
 .ledger-band::after { content: ""; position: absolute; right: -90px; top: -110px; width: 360px; height: 360px; border: 1px solid rgba(255,255,255,.08); border-radius: 50%; box-shadow: 0 0 0 55px rgba(255,255,255,.022), 0 0 0 110px rgba(255,255,255,.018); }
 .ledger-origin, .ledger-today { position: relative; z-index: 1; }
 .ledger-today { text-align: right; }
@@ -162,10 +198,15 @@ th:first-child .sort-header { justify-content: flex-start; }
 .sort-header:hover { color: var(--ink); }
 td { height: 58px; padding: 0 13px; color: #3c485b; border-bottom: 1px solid var(--line-soft); font-size: 11px; text-align: right; white-space: nowrap; }
 tbody tr:last-child td { border-bottom: 0; }
-.positions-table { min-width: 1000px; }
+.positions-table { min-width: 1180px; }
 .positions-table .symbol-col { min-width: 190px; }
+.table-actions-column { position: sticky; right: 0; z-index: 1; background: var(--paper); box-shadow: -10px 0 14px -14px rgba(38, 52, 72, .75); }
+th.table-actions-column { z-index: 2; background: #fafbfc; }
+.positions-table .table-actions-column { width: 126px; min-width: 126px; }
+.all-trades-table .table-actions-column { width: 96px; min-width: 96px; }
 .instrument-row { transition: background 120ms ease; }
 .instrument-row:hover { background: #fafcff; }
+.instrument-row:hover > .table-actions-column, .trade-list-row:hover > .table-actions-column { background: #fafcff; }
 .instrument-cell, .platform-row > td:first-child { display: flex; align-items: center; }
 .expand-button { width: 25px; height: 32px; margin-right: 5px; color: #8490a2; }
 .stock-identity { display: inline-flex; flex-direction: column; gap: 3px; vertical-align: middle; }
@@ -173,6 +214,9 @@ tbody tr:last-child td { border-bottom: 0; }
 .stock-identity span { max-width: 180px; overflow: hidden; color: var(--slate); font: 400 9px/1.2 "Noto Sans SC"; text-overflow: ellipsis; }
 .quote-status { display: block; margin-top: 3px; color: var(--profit); font: 500 9px/1 "IBM Plex Mono"; }
 .quote-status.stale { color: #a46e18; }
+.range-price { font-weight: 600; }
+.range-price.high { color: #a33b3b; }
+.range-price.low { color: #177052; }
 .position-chip { display: inline-flex; align-items: center; gap: 3px; padding: 3px 6px; border-radius: 5px; font: 500 10px/1 "IBM Plex Mono"; }
 .position-chip.long { color: #17664e; background: #e8f5ef; }
 .position-chip.short { color: #a13535; background: #fbebeb; }
@@ -180,6 +224,7 @@ tbody tr:last-child td { border-bottom: 0; }
 .row-actions { display: flex; align-items: center; justify-content: flex-end; gap: 2px; }
 .platform-row { background: #f8fafc; }
 .platform-row td { height: 52px; color: #5d697b; }
+.platform-row > .table-actions-column { background: #f8fafc; }
 .platform-branch { margin: 0 14px 0 31px; color: #aab3c0; font-family: "IBM Plex Mono"; }
 .muted-cell { color: #9ba5b3 !important; }
 .empty-state { display: flex; min-height: 270px; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
@@ -236,6 +281,36 @@ tbody tr:last-child td { border-bottom: 0; }
 .side-label { display: inline-flex; padding: 3px 7px; border-radius: 5px; font: 500 9px/1 "Noto Sans SC"; }
 .side-label.buy { color: #2358bd; background: #eaf0fd; }
 .side-label.sell { color: #a75a08; background: #fff3e2; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.trades-page-header { align-items: center; margin-bottom: 19px; }
+.trades-total { display: inline-flex; align-items: baseline; gap: 5px; color: var(--slate); font-size: 10px; white-space: nowrap; }
+.trades-total strong { color: var(--ink); font: 500 19px/1 "IBM Plex Mono"; }
+.trades-list-panel { overflow: hidden; background: var(--paper); border: 1px solid var(--line); border-radius: 13px; box-shadow: 0 6px 24px rgba(38, 52, 72, .045); }
+.all-trades-table { min-width: 1160px; }
+.all-trades-table th:nth-child(1), .all-trades-table th:nth-child(2), .all-trades-table th:nth-child(3), .all-trades-table th:nth-child(4), .all-trades-table th:nth-child(10),
+.all-trades-table td:nth-child(1), .all-trades-table td:nth-child(2), .all-trades-table td:nth-child(3), .all-trades-table td:nth-child(4), .all-trades-table td:nth-child(10) { text-align: left; }
+.all-trades-table td { height: 64px; }
+.trade-list-row { position: relative; transition: background 120ms ease; }
+.trade-list-row::after { content: ""; position: absolute; top: 15px; bottom: 15px; left: 0; width: 2px; background: var(--trade); border-radius: 0 2px 2px 0; opacity: .75; }
+.trade-list-row.sell::after { background: var(--sell); }
+.trade-list-row:hover { background: #fafcff; }
+.trade-time { color: #596578; font-size: 10px; }
+.trade-instrument-link { display: inline-flex; min-width: 120px; flex-direction: column; gap: 3px; padding: 3px 0; color: inherit; background: transparent; border: 0; cursor: pointer; text-align: left; }
+.trade-instrument-link strong { color: var(--ink); font: 600 12px/1.2 "IBM Plex Mono"; }
+.trade-instrument-link span { max-width: 145px; overflow: hidden; color: var(--slate); font: 400 9px/1.2 "Noto Sans SC"; text-overflow: ellipsis; white-space: nowrap; }
+.trade-instrument-link:hover strong { color: var(--trade); }
+.trade-direction { display: flex; align-items: center; gap: 7px; }
+.trade-direction small { color: #8a95a6; font-size: 9px; }
+.trade-note { display: block; max-width: 160px; overflow: hidden; color: #596578; font-family: "Noto Sans SC", sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.trade-note.empty { color: #aab2bd; }
+.trades-pagination { display: flex; min-height: 56px; align-items: center; justify-content: space-between; gap: 18px; padding: 11px 15px; background: #fafbfc; border-top: 1px solid var(--line-soft); }
+.trades-pagination p { margin: 0; color: #7d8999; font-size: 9px; }
+.trades-pagination p span { color: #4e5b6e; font: 500 10px/1 "IBM Plex Mono"; }
+.trades-pagination nav { display: flex; align-items: center; gap: 10px; }
+.trades-pagination .ui-button { min-width: 76px; }
+.pagination-page { min-width: 86px; color: #7d8999; font-size: 9px; text-align: center; white-space: nowrap; }
+.pagination-page strong { color: var(--ink); font: 500 11px/1 "IBM Plex Mono"; }
 
 .form-stack { display: flex; flex-direction: column; gap: 14px; padding: 20px 23px 23px; }
 label { display: flex; flex-direction: column; gap: 7px; color: #566276; font-size: 10px; font-weight: 500; }
@@ -312,6 +387,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--trade); box-shad
   .page { padding-left: 24px; padding-right: 24px; }
   .ledger-metrics { grid-template-columns: repeat(4, 1fr); }
   .ledger-metrics > div:last-child { display: none; }
+}
+
+@media (max-width: 720px) {
+  .trades-pagination { align-items: stretch; flex-direction: column; }
+  .trades-pagination nav { justify-content: space-between; }
 }
 
 @media (prefers-reduced-motion: reduce) {
