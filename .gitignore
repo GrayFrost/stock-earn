@@ -1,0 +1,12 @@
+node_modules/
+.vite/
+out/
+coverage/
+*.log
+*.db
+*.db-shm
+*.db-wal
+backups/
+*backup*.json
+quote-key.bin
+*.stockearn.json
