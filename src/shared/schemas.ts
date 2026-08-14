@@ -12,7 +12,7 @@ export const instrumentAddSchema = z.object({
   name: z.string().trim().max(100).optional(),
   exchange: z.string().trim().max(40).optional(),
 });
-export const instrumentUpdateSchema = z.object({ id: idSchema, name: z.string().trim().max(100), exchange: z.string().trim().max(40) });
+export const instrumentUpdateSchema = instrumentAddSchema.extend({ id: idSchema, name: z.string().trim().max(100), exchange: z.string().trim().max(40) });
 export const tradeInputSchema = z.object({
   instrumentId: idSchema,
   platformId: idSchema,

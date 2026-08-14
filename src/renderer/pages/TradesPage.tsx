@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Instrument, Platform, TradeResult } from '../../shared/types';
 import { TradeModal } from '../components/TradeModal';
 import { Button } from '../components/ui/button';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { Tooltip } from '../components/ui/tooltip';
 import { actionLabel, errorMessage, formatEt, money, number, pnlClass, price } from '../format';
 
@@ -16,6 +17,7 @@ export function TradesPage() {
   const [instruments, setInstruments] = useState<Instrument[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [editingTrade, setEditingTrade] = useState<TradeResult | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<TradeResult | null>(null);
   const [notice, setNotice] = useState('');
   const [page, setPage] = useState(1);
 
@@ -61,8 +63,6 @@ export function TradesPage() {
   }
 
   async function removeTrade(trade: TradeResult) {
-    const instrument = instrumentById.get(trade.instrumentId);
-    if (!confirm(`删除 ${instrument?.symbol ?? '这只股票'} 在 ${formatEt(trade.executedAt)} 的交易？之后的 FIFO 盈亏会重新计算。`)) return;
     setNotice('');
     try {
       await window.stockEarn.trades.delete(trade.id);
@@ -134,7 +134,7 @@ export function TradesPage() {
               <td><span className={trade.note ? 'trade-note' : 'trade-note empty'} title={trade.note}>{trade.note || '—'}</span></td>
               <td className="table-actions-column"><div className="row-actions">
                 <Tooltip label="编辑交易"><Button variant="icon" size="icon" onClick={() => setEditingTrade(trade)}><Edit3 size={15} /></Button></Tooltip>
-                <Tooltip label="删除交易"><Button variant="icon" size="icon" className="danger" onClick={() => removeTrade(trade)}><Trash2 size={15} /></Button></Tooltip>
+                <Tooltip label="删除交易"><Button variant="icon" size="icon" className="danger" onClick={() => setPendingDelete(trade)}><Trash2 size={15} /></Button></Tooltip>
               </div></td>
             </tr>;
           })}</tbody>
@@ -166,5 +166,6 @@ export function TradesPage() {
       onClose={() => setEditingTrade(null)}
       onSaved={() => { setEditingTrade(null); void load(); }}
     />}
+    <ConfirmDialog open={Boolean(pendingDelete)} onOpenChange={(open) => { if (!open) setPendingDelete(null); }} title={`删除 ${pendingDelete ? instrumentById.get(pendingDelete.instrumentId)?.symbol ?? '股票' : ''} 交易？`} description={<>将删除 {pendingDelete ? formatEt(pendingDelete.executedAt) : ''} 的交易，之后的 FIFO 持仓和盈亏会重新计算。此操作无法撤销。</>} confirmText="删除交易" onConfirm={async () => { if (pendingDelete) await removeTrade(pendingDelete); }} />
   </div>;
 }

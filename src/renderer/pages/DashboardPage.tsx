@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { Plus, RefreshCw, Search } from 'lucide-react';
+import { Info, Plus, RefreshCw, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { Instrument, Platform, PortfolioSummary, TradeResult } from '../../shared/types';
 import { errorMessage, money, pnlClass } from '../format';
@@ -8,8 +8,19 @@ import { PositionsTable } from '../components/PositionsTable';
 import { ProfitTrendChart } from '../components/ProfitTrendChart';
 import { TradeModal } from '../components/TradeModal';
 import { Button } from '../components/ui/button';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { Field, Input } from '../components/ui/input';
 import { Tabs } from '../components/ui/tabs';
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  let timeoutId: number | undefined;
+  const timeout = new Promise<never>((_resolve, reject) => {
+    timeoutId = window.setTimeout(() => reject(new Error('刷新超时，请稍后重试')), timeoutMs);
+  });
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+  });
+}
 
 export function DashboardPage({ showAllInitially = false }: { showAllInitially?: boolean }) {
   const navigate = useNavigate();
@@ -19,7 +30,9 @@ export function DashboardPage({ showAllInitially = false }: { showAllInitially?:
   const [filter, setFilter] = useState<'active' | 'all' | 'closed'>(showAllInitially ? 'all' : 'active');
   const [search, setSearch] = useState('');
   const [stockModal, setStockModal] = useState(false);
+  const [editingInstrument, setEditingInstrument] = useState<Instrument | null>(null);
   const [tradeInstrument, setTradeInstrument] = useState<Instrument | null>(null);
+  const [pendingAction, setPendingAction] = useState<{ kind: 'archive' | 'delete'; instrument: Instrument } | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState('');
   const load = useCallback(() => Promise.all([window.stockEarn.portfolio.getSummary(), window.stockEarn.platforms.list(true), window.stockEarn.trades.list()]).then(([nextSummary, nextPlatforms, nextTrades]) => { setSummary(nextSummary); setPlatforms(nextPlatforms); setTrades(nextTrades); }), []);
@@ -37,16 +50,24 @@ export function DashboardPage({ showAllInitially = false }: { showAllInitially?:
     setRefreshing(true); setNotice('');
     try {
       const ids = summary?.instruments.filter((item) => !item.instrument.archived).map((item) => item.instrument.id);
-      const result = await window.stockEarn.market.refreshQuotes(ids);
-      setNotice(`已更新 ${result.updated} 只股票${result.failed.length ? `，${result.failed.length} 只沿用缓存` : ''}`);
+      const result = await withTimeout(window.stockEarn.market.refreshQuotes(ids), 25_000);
+      const failureMessages = [...new Set(result.failed.map((item) => item.message))].slice(0, 2).join('；');
+      setNotice(`已更新 ${result.updated} 只股票${result.failed.length ? `，${result.failed.length} 只沿用缓存（${failureMessages}）` : ''}`);
       await load();
     } catch (reason) { setNotice(errorMessage(reason)); }
     finally { setRefreshing(false); }
   }
 
   async function archive(instrument: Instrument) {
-    if (!instrument.archived && !confirm(`将 ${instrument.symbol} 从活跃列表归档？交易记录会保留。`)) return;
-    await window.stockEarn.instruments.archive({ id: instrument.id, archived: !instrument.archived }); await load();
+    setNotice('');
+    try { await window.stockEarn.instruments.archive({ id: instrument.id, archived: !instrument.archived }); await load(); }
+    catch (reason) { setNotice(errorMessage(reason)); }
+  }
+
+  async function removeInstrument(instrument: Instrument) {
+    setNotice('');
+    try { await window.stockEarn.instruments.delete(instrument.id); await load(); }
+    catch (reason) { setNotice(errorMessage(reason)); }
   }
 
   if (!summary) return <PageLoading />;
@@ -62,11 +83,20 @@ export function DashboardPage({ showAllInitially = false }: { showAllInitially?:
     <section className="profit-trend-panel"><div className="section-heading"><div><p className="eyebrow">REALIZED PROFIT PATH</p><h2>已实现盈亏轨迹</h2><p>按平仓月份回看真正落袋的结果，不让短期浮动干扰判断。</p></div><div className="trend-legend"><span><i className="bar" />当月</span><span><i className="line" />累计</span></div></div><ProfitTrendChart trades={trades} /></section>
     <section className="ledger-table-section">
       <div className="table-toolbar"><Tabs value={filter} onValueChange={(value) => setFilter(value as typeof filter)} items={[{ value: 'active', label: '持仓中' }, { value: 'all', label: '全部' }, { value: 'closed', label: '已清仓' }]} /><div className="toolbar-right"><div className="search-box"><Search size={15} /><Input aria-label="搜索股票" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="搜索股票" /></div><span className="table-hint">点击列名排序</span></div></div>
-      <PositionsTable data={rows} hasInstruments={Boolean(summary.instruments.length)} onAddStock={() => setStockModal(true)} onTrade={setTradeInstrument} onOpen={(instrument) => navigate(`/stock/${instrument.id}`)} onArchive={archive} />
+      {rows.some((item) => item.sinceEntryHigh === null || item.sinceEntryLow === null) && <div className="history-data-hint"><Info size={14} />入市最高和最低来自历史日线，请进入对应股票详情同步或更新日线数据。</div>}
+      <PositionsTable data={rows} hasInstruments={Boolean(summary.instruments.length)} onAddStock={() => setStockModal(true)} onTrade={setTradeInstrument} onOpen={(instrument) => navigate(`/stock/${instrument.id}`)} onEdit={setEditingInstrument} onArchive={(instrument) => instrument.archived ? void archive(instrument) : setPendingAction({ kind: 'archive', instrument })} onDelete={(instrument) => setPendingAction({ kind: 'delete', instrument })} />
     </section>
     {stockModal && <AddStockModal onClose={() => setStockModal(false)} onSaved={() => { setStockModal(false); void load(); }} />}
+    {editingInstrument && <EditStockModal instrument={editingInstrument} onClose={() => setEditingInstrument(null)} onSaved={() => { setEditingInstrument(null); void load(); }} />}
     {tradeInstrument && <TradeModal instrument={tradeInstrument} platforms={platforms} onClose={() => setTradeInstrument(null)} onSaved={() => { setTradeInstrument(null); void load(); }} />}
+    <ConfirmDialog open={Boolean(pendingAction)} onOpenChange={(open) => { if (!open) setPendingAction(null); }} title={pendingAction?.kind === 'delete' ? `永久删除 ${pendingAction.instrument.symbol}？` : `归档 ${pendingAction?.instrument.symbol ?? ''}？`} description={pendingAction?.kind === 'delete' ? '该股票没有交易记录，相关参考价缓存和历史日线也会一并删除。此操作无法撤销。' : '股票会从持仓列表隐藏，但所有交易记录和盈亏数据都会保留，之后可以恢复。'} confirmText={pendingAction?.kind === 'delete' ? '永久删除' : '确认归档'} tone={pendingAction?.kind === 'delete' ? 'danger' : 'primary'} onConfirm={async () => { if (!pendingAction) return; if (pendingAction.kind === 'delete') await removeInstrument(pendingAction.instrument); else await archive(pendingAction.instrument); }} />
   </div>;
+}
+
+function EditStockModal({ instrument, onClose, onSaved }: { instrument: Instrument; onClose: () => void; onSaved: () => void }) {
+  const [symbol, setSymbol] = useState(instrument.symbol); const [name, setName] = useState(instrument.name); const [exchange, setExchange] = useState(instrument.exchange); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
+  async function submit(event: FormEvent) { event.preventDefault(); setBusy(true); setError(''); try { await window.stockEarn.instruments.update({ id: instrument.id, symbol, name, exchange }); onSaved(); } catch (reason) { const message = errorMessage(reason); setError(message.includes('UNIQUE') ? '这个股票代码已存在于账本中。' : message); } finally { setBusy(false); } }
+  return <Modal title={`编辑 ${instrument.symbol}`} subtitle="修正股票代码、公司名称或交易所；已有交易和盈亏记录不会丢失。" onClose={onClose}><form className="form-stack" onSubmit={submit}><Field label="股票代码"><Input value={symbol} onChange={(e) => setSymbol(e.target.value.toUpperCase())} placeholder="AAPL" autoFocus required /></Field><Field label="公司名称"><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Apple Inc.（可选）" /></Field><Field label="交易所"><Input value={exchange} onChange={(e) => setExchange(e.target.value)} placeholder="NASDAQ（可选）" /></Field>{error && <div className="inline-error">{error}</div>}<footer className="modal-actions"><Button type="button" variant="ghost" onClick={onClose}>取消</Button><Button variant="primary" disabled={busy || !symbol}>{busy ? '保存中…' : '保存修改'}</Button></footer></form></Modal>;
 }
 
 function AddStockModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {

@@ -64,6 +64,38 @@ describe('LedgerDatabase', () => {
     expect(db.getSettings().fontSize).toBe('large');
   });
 
+  it('可以修正股票代码和公司名称', () => {
+    const { instrument } = seed();
+    db.upsertQuote({ instrumentId: instrument.id, price: '25', change: '1', changePercent: '4', quotedAt: '2026-01-03T21:00:00.000Z', fetchedAt: new Date().toISOString() });
+    db.upsertBars([{ instrumentId: instrument.id, date: '2026-01-02', open: '24', high: '26', low: '23', close: '25', volume: '100' }]);
+    const updated = db.updateInstrument(instrument.id, 'PHG', 'Koninklijke Philips', 'NYSE');
+    expect(updated).toMatchObject({ symbol: 'PHG', name: 'Koninklijke Philips', exchange: 'NYSE' });
+    expect(db.getQuotes([instrument.id])).toHaveLength(0);
+    expect(db.getDailyBars(instrument.id)).toHaveLength(0);
+  });
+
+  it('永久删除没有交易的股票及其行情数据', () => {
+    const { instrument } = seed();
+    db.upsertQuote({ instrumentId: instrument.id, price: '25', change: '1', changePercent: '4', quotedAt: '2026-01-03T21:00:00.000Z', fetchedAt: new Date().toISOString() });
+    db.deleteInstrument(instrument.id);
+    expect(db.listInstruments(true)).toHaveLength(0);
+    expect(db.getQuotes()).toHaveLength(0);
+  });
+
+  it('有交易记录的股票不能被永久删除', () => {
+    const { platform, instrument } = seed();
+    db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '10', fee: '0', executedAt: '2026-01-05T15:00:00.000Z' });
+    expect(() => db.deleteInstrument(instrument.id)).toThrow('仍有交易记录');
+  });
+
+  it('编辑交易成交价后重新计算盈亏', () => {
+    const { platform, instrument } = seed();
+    const buy = db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '10', fee: '0', executedAt: '2026-01-05T15:00:00.000Z' });
+    db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'SELL', quantity: '1', unitPrice: '15', fee: '0', executedAt: '2026-01-06T15:00:00.000Z' });
+    db.updateTrade(buy.id, { instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '12', fee: '0', executedAt: '2026-01-05T15:00:00.000Z', note: '' });
+    expect(db.getPortfolioSummary().instruments[0].realizedPnl).toBe('3');
+  });
+
   it('导出并恢复版本化备份', () => {
     const { platform, instrument } = seed();
     db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '10', fee: '0', executedAt: '2026-01-05T15:00:00.000Z' });

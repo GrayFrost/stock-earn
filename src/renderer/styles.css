@@ -114,7 +114,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .ui-select-content { z-index: 130; min-width: var(--radix-select-trigger-width); max-height: 260px; overflow: hidden; padding: 4px; background: #fff; border: 1px solid var(--line); border-radius: 9px; box-shadow: var(--shadow); animation: select-in 120ms ease-out; }
 .ui-select-item { position: relative; display: flex; align-items: center; height: 34px; padding: 0 30px 0 10px; border-radius: 6px; outline: 0; cursor: pointer; font-size: 11px; }
 .ui-select-item[data-highlighted] { background: #eef4ff; color: #204f9f; }
-.ui-select-item span:last-child { position: absolute; right: 9px; display: grid; place-items: center; }
+.ui-select-item-indicator { position: absolute; right: 9px; display: grid; place-items: center; }
 @keyframes select-in { from { opacity: 0; transform: translateY(-3px); } }
 .ui-tabs-list { display: flex; gap: 3px; padding: 3px; background: #eef2f6; border-radius: 8px; }
 .ui-tabs-trigger { min-width: 62px; padding: 6px 10px; color: var(--slate); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 11px; }
@@ -124,6 +124,12 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .ui-dialog-wide { width: min(720px, calc(100vw - 56px)); }
 .ui-dialog-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 21px 23px 16px; border-bottom: 1px solid var(--line-soft); }
 .ui-dialog-header h2 { margin: 0; font-size: 17px; }.ui-dialog-header p { margin: 5px 0 0; color: var(--slate); font-size: 10px; }
+.ui-alert-dialog-content { position: fixed; z-index: 110; top: 50%; left: 50%; display: grid; width: min(440px, calc(100vw - 40px)); grid-template-columns: 42px 1fr; gap: 14px; padding: 23px; background: #fff; border: 1px solid rgba(255,255,255,.7); border-radius: 15px; box-shadow: var(--shadow); transform: translate(-50%, -50%); animation: dialog-in 160ms ease-out; }
+.ui-alert-dialog-icon { display: grid; width: 40px; height: 40px; place-items: center; color: var(--trade); background: #edf3ff; border-radius: 10px; }
+.ui-alert-dialog-icon.danger { color: #b83232; background: #fff0f0; }
+.ui-alert-dialog-copy h2 { margin: 1px 0 0; font-size: 16px; }
+.ui-alert-dialog-copy p { margin: 7px 0 0; color: var(--slate); font-size: 11px; line-height: 1.65; }
+.ui-alert-dialog-actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; gap: 8px; margin-top: 7px; padding-top: 15px; border-top: 1px solid var(--line-soft); }
 @keyframes overlay-in { from { opacity: 0; } }
 @keyframes dialog-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)) scale(.985); } }
 .ui-tooltip { z-index: 150; padding: 6px 8px; color: #fff; background: var(--ink); border-radius: 5px; font-size: 9px; box-shadow: 0 5px 14px rgba(23,33,50,.18); }
@@ -135,7 +141,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .date-time-trigger > svg { flex: 0 0 auto; color: #7b8799; }
 .date-time-trigger > span { flex: 1; color: var(--ink); font: 500 11px/1 "IBM Plex Mono", monospace; text-align: left; }
 .date-time-trigger > small { padding: 4px 6px; color: #50627e; background: #eef3fb; border-radius: 5px; font: 600 8px/1 "IBM Plex Mono", monospace; letter-spacing: .08em; }
-.date-time-popover { width: 306px; overflow: hidden; }
+.date-time-popover { width: 306px; max-height: var(--radix-popover-content-available-height); overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.date-time-popover::-webkit-scrollbar { width: 6px; }
+.date-time-popover::-webkit-scrollbar-thumb { background: #cbd3df; border-radius: 999px; }
 .ui-calendar { position: relative; padding: 12px 13px 10px; color: var(--ink); }
 .ui-calendar-months, .ui-calendar-month { width: 100%; }
 .ui-calendar-caption { display: flex; height: 38px; align-items: center; justify-content: center; }
@@ -155,14 +163,20 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .ui-calendar-day.is-outside .ui-calendar-day-button { color: #b3bbc7; }
 .ui-calendar-day.is-disabled .ui-calendar-day-button { opacity: .35; cursor: not-allowed; }
 .ui-calendar-day.is-hidden { visibility: hidden; }
-.date-time-controls { padding: 11px 13px 13px; background: #f8fafc; border-top: 1px solid var(--line-soft); }
+.date-time-controls { position: sticky; z-index: 2; bottom: 0; padding: 11px 13px 13px; background: #f8fafc; border-top: 1px solid var(--line-soft); box-shadow: 0 -8px 16px rgba(23,33,50,.035); }
 .date-time-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
 .date-time-heading > span { display: inline-flex; align-items: center; gap: 6px; color: #4d5a6e; font-size: 10px; font-weight: 600; }
 .date-time-heading > span svg { color: var(--trade); }
 .date-time-heading > small { color: #8b96a7; font-size: 8px; }
-.date-time-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; }
-.date-time-row .ui-input { height: 34px; font: 500 11px/1 "IBM Plex Mono", monospace; }
+.date-time-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 6px; }
+.date-time-selects { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 5px; }
+.date-time-selects > span { color: #7d8999; font: 600 12px/1 "IBM Plex Mono", monospace; }
+.date-time-select { height: 34px; padding: 0 8px; font: 500 10px/1 "IBM Plex Mono", monospace; }
 .date-time-row .ui-button { white-space: nowrap; }
+.date-picker-trigger { width: 100%; height: 40px; justify-content: flex-start; gap: 9px; padding: 0 11px; }
+.date-picker-trigger > svg { color: #7b8799; }
+.date-picker-trigger > span { color: var(--ink); font: 500 11px/1 "IBM Plex Mono", monospace; }
+.date-picker-popover { width: 306px; overflow: hidden; }
 
 .ledger-band { position: relative; display: grid; grid-template-columns: 132px 1fr 132px; align-items: center; min-height: 168px; padding: 26px 30px 68px; overflow: hidden; color: #fff; background: var(--ink); border-radius: 15px 15px 15px 4px; box-shadow: 0 15px 35px rgba(23, 33, 50, .16); }
 .ledger-band::after { content: ""; position: absolute; right: -90px; top: -110px; width: 360px; height: 360px; border: 1px solid rgba(255,255,255,.08); border-radius: 50%; box-shadow: 0 0 0 55px rgba(255,255,255,.022), 0 0 0 110px rgba(255,255,255,.018); }
@@ -185,6 +199,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 .ledger-table-section, .chart-panel, .trades-panel, .profit-trend-panel { margin-top: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 13px; box-shadow: 0 6px 24px rgba(38, 52, 72, .045); }
 .table-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 13px 15px; border-bottom: 1px solid var(--line-soft); }
+.history-data-hint { display: flex; align-items: center; gap: 6px; padding: 8px 15px; color: #65738a; background: #f8fafd; border-bottom: 1px solid var(--line-soft); font-size: 10px; }
+.history-data-hint svg { flex: 0 0 auto; color: #7184a3; }
 .segmented { display: flex; gap: 3px; padding: 3px; background: #eef2f6; border-radius: 8px; }
 .segmented button { min-width: 62px; padding: 6px 10px; color: var(--slate); background: transparent; border: 0; border-radius: 6px; cursor: pointer; font-size: 11px; }
 .segmented button.active { color: var(--ink); background: #fff; box-shadow: 0 2px 6px rgba(33, 46, 65, .08); font-weight: 600; }
@@ -428,7 +444,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--trade); box-shad
 
 :root:not([data-font-size="base"]) :is(
   .brand span, .button.small, .ui-button-sm, .ui-select-item, .ui-tabs-trigger,
-  .date-time-trigger > span, .date-time-row .ui-input, .ledger-metrics strong,
+  .date-time-trigger > span, .date-picker-trigger > span, .date-time-select, .ledger-metrics strong,
   .segmented button, .search-box input, .compact-select, td, .empty-state p,
   .profit-chart-empty strong, .chart-empty, .pagination-page strong,
   .side-switch button, .color-options span, .font-size-options strong,

@@ -39,8 +39,9 @@ export function registerIpc(db: LedgerDatabase, market: MarketService, secrets: 
 
   handle('instruments.list', (include = false) => db.listInstruments(Boolean(include)));
   handle('instruments.add', (raw: unknown) => { const input = instrumentAddSchema.parse(raw); return db.addInstrument(input.symbol, input.name, input.exchange); });
-  handle('instruments.update', (raw: unknown) => { const input = instrumentUpdateSchema.parse(raw); return db.updateInstrument(input.id, input.name, input.exchange); });
+  handle('instruments.update', (raw: unknown) => { const input = instrumentUpdateSchema.parse(raw); return db.updateInstrument(input.id, input.symbol, input.name, input.exchange); });
   handle('instruments.archive', (raw: unknown) => { const input = archiveSchema.parse(raw); db.archiveInstrument(input.id, input.archived); });
+  handle('instruments.delete', (raw: unknown) => db.deleteInstrument(idSchema.parse(raw)));
   handle('instruments.getDetail', (raw: unknown) => db.getInstrumentDetail(idSchema.parse(raw)));
 
   handle('trades.create', (raw: unknown) => db.createTrade(tradeInputSchema.parse(raw)));

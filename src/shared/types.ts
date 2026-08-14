@@ -146,8 +146,9 @@ export interface StockEarnApi {
   instruments: {
     list(includeArchived?: boolean): Promise<Instrument[]>;
     add(input: { symbol: string; name?: string; exchange?: string }): Promise<Instrument>;
-    update(input: { id: string; name: string; exchange: string }): Promise<Instrument>;
+    update(input: { id: string; symbol: string; name: string; exchange: string }): Promise<Instrument>;
     archive(input: { id: string; archived: boolean }): Promise<void>;
+    delete(id: string): Promise<void>;
     getDetail(id: string): Promise<InstrumentDetail>;
   };
   trades: {

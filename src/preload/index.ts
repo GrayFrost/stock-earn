@@ -20,6 +20,7 @@ const api: StockEarnApi = {
     add: (input) => invoke('instruments.add', input),
     update: (input) => invoke('instruments.update', input),
     archive: (input) => invoke('instruments.archive', input),
+    delete: (id) => invoke('instruments.delete', id),
     getDetail: (id) => invoke('instruments.getDetail', id),
   },
   trades: {

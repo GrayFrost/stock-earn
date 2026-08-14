@@ -1,18 +1,20 @@
 import { flexRender, getCoreRowModel, getExpandedRowModel, getSortedRowModel, useReactTable, type ColumnDef, type ExpandedState, type Row, type SortingState } from '@tanstack/react-table';
-import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, CirclePlus, RotateCcw, TrendingDown, TrendingUp } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ArrowUpDown, ChevronDown, ChevronRight, CirclePlus, Edit3, RotateCcw, Trash2, TrendingDown, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { Instrument, InstrumentPosition } from '../../shared/types';
 import { money, number, pnlClass, price } from '../format';
 import { Button } from './ui/button';
 import { Tooltip } from './ui/tooltip';
 
-export function PositionsTable({ data, hasInstruments, onAddStock, onTrade, onOpen, onArchive }: {
+export function PositionsTable({ data, hasInstruments, onAddStock, onTrade, onOpen, onEdit, onArchive, onDelete }: {
   data: InstrumentPosition[];
   hasInstruments: boolean;
   onAddStock: () => void;
   onTrade: (instrument: Instrument) => void;
   onOpen: (instrument: Instrument) => void;
+  onEdit: (instrument: Instrument) => void;
   onArchive: (instrument: Instrument) => void;
+  onDelete: (instrument: Instrument) => void;
 }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'netPnl', desc: true }]);
   const [expanded, setExpanded] = useState<ExpandedState>({});
@@ -31,8 +33,8 @@ export function PositionsTable({ data, hasInstruments, onAddStock, onTrade, onOp
     { id: 'realizedPnl', header: '已实现', accessorFn: (row) => Number(row.realizedPnl), cell: ({ row }) => <span className={pnlClass(row.original.realizedPnl)}>{money(row.original.realizedPnl, true)}</span> },
     { id: 'unrealizedPnl', header: '未实现', accessorFn: (row) => Number(row.unrealizedPnl), cell: ({ row }) => <span className={pnlClass(row.original.unrealizedPnl)}>{money(row.original.unrealizedPnl, true)}</span> },
     { id: 'netPnl', header: '净盈亏', accessorFn: (row) => Number(row.netPnl), cell: ({ row }) => <span className={`pnl-total ${pnlClass(row.original.netPnl)}`}>{money(row.original.netPnl, true)}</span> },
-    { id: 'actions', enableSorting: false, header: '', cell: ({ row }) => <div className="row-actions"><Tooltip label="记录交易"><Button variant="icon" size="icon" onClick={() => onTrade(row.original.instrument)}><CirclePlus size={17} /></Button></Tooltip><Tooltip label="打开详情"><Button variant="icon" size="icon" onClick={() => onOpen(row.original.instrument)}><ChartIcon /></Button></Tooltip><Tooltip label={row.original.instrument.archived ? '恢复股票' : '归档股票'}><Button variant="icon" size="icon" onClick={() => onArchive(row.original.instrument)}>{row.original.instrument.archived ? <RotateCcw size={16} /> : <Archive size={16} />}</Button></Tooltip></div> },
-  ], [onArchive, onOpen, onTrade]);
+    { id: 'actions', enableSorting: false, header: '', cell: ({ row }) => <div className="row-actions"><Tooltip label="记录交易"><Button variant="icon" size="icon" onClick={() => onTrade(row.original.instrument)}><CirclePlus size={17} /></Button></Tooltip><Tooltip label="打开详情并编辑交易价格"><Button variant="icon" size="icon" onClick={() => onOpen(row.original.instrument)}><ChartIcon /></Button></Tooltip><Tooltip label="编辑股票信息"><Button variant="icon" size="icon" onClick={() => onEdit(row.original.instrument)}><Edit3 size={16} /></Button></Tooltip>{row.original.platforms.length === 0 ? <Tooltip label="永久删除股票"><Button variant="icon" size="icon" className="danger" onClick={() => onDelete(row.original.instrument)}><Trash2 size={16} /></Button></Tooltip> : <Tooltip label={row.original.instrument.archived ? '恢复股票' : '归档股票（保留交易记录）'}><Button variant="icon" size="icon" onClick={() => onArchive(row.original.instrument)}>{row.original.instrument.archived ? <RotateCcw size={16} /> : <Archive size={16} />}</Button></Tooltip>}</div> },
+  ], [onArchive, onDelete, onEdit, onOpen, onTrade]);
 
   const table = useReactTable({ data, columns, state: { sorting, expanded }, onSortingChange: setSorting, onExpandedChange: setExpanded, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getExpandedRowModel: getExpandedRowModel(), getRowCanExpand: (row) => row.original.platforms.length > 0 });
   return <div className="table-scroll"><table className="positions-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => <th key={header.id} className={header.column.id === 'instrument' ? 'symbol-col' : header.column.id === 'actions' ? 'table-actions-column' : ''}>{header.isPlaceholder ? null : header.column.getCanSort() ? <button className="sort-header" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}{header.column.getIsSorted() === 'asc' ? <ArrowUp size={12} /> : header.column.getIsSorted() === 'desc' ? <ArrowDown size={12} /> : <ArrowUpDown size={12} />}</button> : flexRender(header.column.columnDef.header, header.getContext())}</th>)}</tr>)}</thead><tbody>

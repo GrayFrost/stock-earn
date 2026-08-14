@@ -9,7 +9,7 @@ export function Select({ value, onValueChange, options, placeholder, className }
     <SelectPrimitive.Trigger className={cn('ui-select-trigger', className)}><SelectPrimitive.Value placeholder={placeholder} /><SelectPrimitive.Icon><ChevronDown size={15} /></SelectPrimitive.Icon></SelectPrimitive.Trigger>
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content className="ui-select-content" position="popper" sideOffset={5}>
-        <SelectPrimitive.Viewport>{options.map((option) => <SelectPrimitive.Item key={option.value} value={option.value} disabled={option.disabled} className="ui-select-item"><SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText><SelectPrimitive.ItemIndicator><Check size={14} /></SelectPrimitive.ItemIndicator></SelectPrimitive.Item>)}</SelectPrimitive.Viewport>
+        <SelectPrimitive.Viewport>{options.map((option) => <SelectPrimitive.Item key={option.value} value={option.value} disabled={option.disabled} className="ui-select-item"><SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText><SelectPrimitive.ItemIndicator className="ui-select-item-indicator"><Check size={14} /></SelectPrimitive.ItemIndicator></SelectPrimitive.Item>)}</SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   </SelectPrimitive.Root>;

@@ -142,9 +142,28 @@ export class LedgerDatabase {
     return instrument;
   }
 
-  updateInstrument(id: string, name: string, exchange: string): Instrument {
-    this.db.prepare('UPDATE instruments SET name = ?, exchange = ? WHERE id = ?').run(name, exchange, id);
-    return this.getInstrument(id);
+  updateInstrument(id: string, symbol: string, name: string, exchange: string): Instrument {
+    return this.transaction(() => {
+      const previous = this.db.prepare('SELECT symbol FROM instruments WHERE id = ?').get(id) as Row | undefined;
+      if (!previous) throw new Error('股票不存在');
+      const nextSymbol = symbol.toUpperCase();
+      this.db.prepare('UPDATE instruments SET symbol = ?, name = ?, exchange = ? WHERE id = ?').run(nextSymbol, name, exchange, id);
+      if (str(previous.symbol).toUpperCase() !== nextSymbol) {
+        this.db.prepare('DELETE FROM quote_cache WHERE instrument_id = ?').run(id);
+        this.db.prepare('DELETE FROM daily_bars WHERE instrument_id = ?').run(id);
+      }
+      return this.getInstrument(id);
+    });
+  }
+
+  deleteInstrument(id: string) {
+    this.transaction(() => {
+      const instrument = this.db.prepare('SELECT id FROM instruments WHERE id = ?').get(id);
+      if (!instrument) throw new Error('股票不存在');
+      const tradeCount = Number((this.db.prepare('SELECT COUNT(*) AS value FROM trades WHERE instrument_id = ?').get(id) as Row).value);
+      if (tradeCount) throw new Error('该股票仍有交易记录，不能永久删除；请先删除交易记录，或使用归档');
+      this.db.prepare('DELETE FROM instruments WHERE id = ?').run(id);
+    });
   }
 
   archiveInstrument(id: string, archived: boolean) {
