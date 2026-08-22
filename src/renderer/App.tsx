@@ -8,6 +8,7 @@ import { DetailPage } from './pages/DetailPage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TradesPage } from './pages/TradesPage';
+import { BrandMark } from './components/BrandMark';
 import { TooltipProvider } from './components/ui/tooltip';
 import { resolveFontSize } from './fontSize';
 
@@ -27,7 +28,7 @@ export function App() {
     document.documentElement.dataset.fontSize = settings?.fontSize ?? 'base';
   }, [settings?.fontSize]);
 
-  if (!settings) return <div className="app-loading"><div className="brand-mark">SE</div><span>正在打开账本…</span></div>;
+  if (!settings) return <div className="app-loading"><BrandMark /><span>正在打开账本…</span></div>;
   if (!settings.initialized) return <OnboardingPage onComplete={() => window.stockEarn.settings.get().then((next) => setSettings({ ...next, fontSize: resolveFontSize(next.fontSize) }))} />;
 
   return <TooltipProvider><div className={`app-shell color-${settings.colorMode}${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
@@ -44,7 +45,7 @@ export function App() {
         {sidebarCollapsed ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
       </button>
       <div className="brand">
-        <div className="brand-mark">SE</div>
+        <BrandMark />
         <div className="brand-copy"><strong>Stock Earn</strong><span>美股盈亏账本</span></div>
       </div>
       <nav>

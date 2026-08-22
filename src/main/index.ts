@@ -16,6 +16,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1120, minHeight: 720,
     backgroundColor: '#F5F7FA',
+    icon: join(__dirname, '../../resources/icon.png'),
     titleBarStyle: 'hidden',
     titleBarOverlay: { color: '#F5F7FA', symbolColor: '#172132', height: 44 },
     webPreferences: { preload: join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true },

@@ -106,6 +106,12 @@ export interface InstrumentPosition {
   active: boolean;
 }
 
+export interface PlatformFeeSummary {
+  platform: Platform;
+  fees: string;
+  tradeCount: number;
+}
+
 export interface PortfolioSummary {
   startDate: string | null;
   asOf: string;
@@ -115,6 +121,7 @@ export interface PortfolioSummary {
   fees: string;
   longExposure: string;
   shortExposure: string;
+  platformFees: PlatformFeeSummary[];
   instruments: InstrumentPosition[];
 }
 

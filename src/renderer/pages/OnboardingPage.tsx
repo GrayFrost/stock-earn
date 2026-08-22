@@ -4,6 +4,7 @@ import { errorMessage } from '../format';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { DatePicker } from '../components/DatePicker';
+import { BrandMark } from '../components/BrandMark';
 
 export function OnboardingPage({ onComplete }: { onComplete: () => void }) {
   const [step, setStep] = useState(1);
@@ -33,7 +34,7 @@ export function OnboardingPage({ onComplete }: { onComplete: () => void }) {
   return <div className="onboarding">
     <div className="onboarding-visual">
       <div className="window-drag" />
-      <div className="onboarding-brand"><div className="brand-mark">SE</div><span>Stock Earn</span></div>
+      <div className="onboarding-brand"><BrandMark /><span>Stock Earn</span></div>
       <div className="visual-copy"><p>从第一笔交易开始</p><h1>把赚到的每一美元，<br />算得清清楚楚。</h1></div>
       <div className="ledger-demo"><span>{startDate}</span><i /><strong>今天</strong><div>净盈亏会沿着这条时间线累积</div></div>
       <small>纯本地 · 美股 · USD</small>

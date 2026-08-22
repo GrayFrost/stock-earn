@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="resources/icon.png" width="128" height="128" alt="Stock Earn 美股账本图标">
+</p>
+
 # Stock Earn 美股账本
 
 一个纯本地运行的 Windows 美股盈亏账本，用来记录真实成交，并按 FIFO（先进先出）规则计算多头、空头、已实现盈亏、未实现盈亏和手续费。

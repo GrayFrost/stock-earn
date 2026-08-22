@@ -282,7 +282,20 @@ export class LedgerDatabase {
     const unrealizedPnl = total('unrealizedPnl');
     const longExposure = decimalOut(positions.reduce((sum, item) => sum.plus(item.platforms.filter((p) => p.direction === 'LONG').reduce((s, p) => s.plus(p.exposure), decimal(0))), decimal(0)));
     const shortExposure = decimalOut(positions.reduce((sum, item) => sum.plus(item.platforms.filter((p) => p.direction === 'SHORT').reduce((s, p) => s.plus(p.exposure), decimal(0))), decimal(0)));
-    return { startDate, asOf: now(), realizedPnl, unrealizedPnl, netPnl: decimalOut(decimal(realizedPnl).plus(unrealizedPnl)), fees: total('fees'), longExposure, shortExposure, instruments: positions };
+    const platformFeeTotals = new Map<string, { fees: Decimal; tradeCount: number }>();
+    for (const trade of this.getTrades()) {
+      const current = platformFeeTotals.get(trade.platformId) ?? { fees: decimal(0), tradeCount: 0 };
+      platformFeeTotals.set(trade.platformId, { fees: current.fees.plus(trade.fee), tradeCount: current.tradeCount + 1 });
+    }
+    const platformFees = [...platforms.values()].map((platform) => {
+      const total = platformFeeTotals.get(platform.id);
+      return {
+        platform,
+        fees: decimalOut(total?.fees ?? decimal(0)),
+        tradeCount: total?.tradeCount ?? 0,
+      };
+    }).sort((a, b) => decimal(b.fees).cmp(a.fees) || a.platform.name.localeCompare(b.platform.name, 'zh-CN'));
+    return { startDate, asOf: now(), realizedPnl, unrealizedPnl, netPnl: decimalOut(decimal(realizedPnl).plus(unrealizedPnl)), fees: total('fees'), longExposure, shortExposure, platformFees, instruments: positions };
   }
 
   getInstrumentDetail(id: string): InstrumentDetail {

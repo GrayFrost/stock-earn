@@ -22,6 +22,22 @@ describe('LedgerDatabase', () => {
     expect(summary.netPnl).toBe('24.5');
   });
 
+  it('按平台汇总手续费并保留已归档平台', () => {
+    const { platform, instrument } = seed();
+    const secondPlatform = db.createPlatform('Firstrade');
+    db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'BUY', quantity: '1', unitPrice: '100', fee: '0.35', executedAt: '2026-01-02T15:00:00.000Z', note: '' });
+    db.createTrade({ instrumentId: instrument.id, platformId: platform.id, side: 'SELL', quantity: '1', unitPrice: '105', fee: '0.65', executedAt: '2026-01-03T15:00:00.000Z', note: '' });
+    db.createTrade({ instrumentId: instrument.id, platformId: secondPlatform.id, side: 'BUY', quantity: '1', unitPrice: '102', fee: '0.2', executedAt: '2026-01-04T15:00:00.000Z', note: '' });
+    db.archivePlatform(platform.id, true);
+
+    const summary = db.getPortfolioSummary();
+    expect(summary.fees).toBe('1.2');
+    expect(summary.platformFees).toEqual([
+      { platform: expect.objectContaining({ id: platform.id, archived: true }), fees: '1', tradeCount: 2 },
+      { platform: expect.objectContaining({ id: secondPlatform.id, archived: false }), fees: '0.2', tradeCount: 1 },
+    ]);
+  });
+
   it('按账本起始日汇总每只股票的最高价和最低价，并纳入最新参考价', () => {
     const { instrument } = seed();
     db.upsertBars([

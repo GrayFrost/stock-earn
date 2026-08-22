@@ -16,7 +16,8 @@ export function ProfitTrendChart({ trades }: { trades: TradeResult[] }) {
     let cumulative = 0;
     return [...monthly].sort(([a], [b]) => a.localeCompare(b)).map(([month, realized]) => {
       cumulative += realized;
-      return { month, label: DateTime.fromFormat(month, 'yyyy-LL').toFormat('LLL yy'), realized, cumulative };
+      const date = DateTime.fromFormat(month, 'yyyy-LL');
+      return { month, label: `${date.year}年${date.month}月`, realized, cumulative };
     });
   }, [trades]);
 
